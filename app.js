@@ -8,6 +8,7 @@ var session = require('express-session');
 var FileStore = require('session-file-store')(session);
 var passport = require('passport');
 var authenticate = require('./authenticate');
+var config = require('./config');
 
 var index = require('./routes/index');
 var users = require('./routes/users');
@@ -21,7 +22,7 @@ mongoose.Promise = require('bluebird');
 const Dishes = require('./models/dishes');
 
 // Connection URL
-const url = 'mongodb://localhost:27017/conFusion';
+const url = config.mongoUrl;
 const connect = mongoose.connect(url);
 
 connect.then((db) => {
@@ -36,40 +37,16 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
 // uncomment after placing your favicon in /public
-//app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+// app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cookieParser('94566-12345-67890-12345'));
-app.use(session({
-  name: 'session-id',
-  secret: '94566-12345-67890-12345',
-  saveUninitialized: false,
-  resave: false,
-  store: new FileStore()
-}));
+// app.use(cookieParser('94566-12345-67890-12345'));
 
 app.use(passport.initialize());
-app.use(passport.session());
 
 app.use('/', index);
 app.use('/users', users);
-
-function auth (req, res, next) {
-  console.log(req.user);
-
-  if (!req.user) {
-    var err = new Error('You are not authenticated!');
-    res.setHeader('WWW-Authenticate', 'Basic');                          
-    err.status = 401;
-    next(err);
-  }
-  else {
-        next();
-  }
-}
-
-app.use(auth);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
